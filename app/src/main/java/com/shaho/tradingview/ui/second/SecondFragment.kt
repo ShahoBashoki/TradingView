@@ -1,8 +1,9 @@
 package com.shaho.tradingview.ui.second
 
 import android.os.Bundle
-import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.shaho.tradingview.R
@@ -10,6 +11,7 @@ import com.shaho.tradingview.data.model.response.CandleResponse
 import com.shaho.tradingview.databinding.FragmentSecondBinding
 import com.shaho.tradingview.util.Resource
 import com.shaho.tradingview.util.enum.CandleTimeType
+import com.shaho.tradingview.util.extentions.getCurrentTime
 import com.shaho.tradingview.util.extentions.takeOfHoursAgo
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -33,25 +35,35 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     private var purchasedPrice = 0.0
     private var interestRates = 1.02
     private var percentageOfLoss = 0.98
+    private var showLog = ""
+    private var showHeaderLog = ""
 
     private val viewModel: SecondViewModel by viewModels()
+    private lateinit var binding: FragmentSecondBinding
+
+    private var startFragment = true
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        if (::binding.isInitialized.not())
+            binding = FragmentSecondBinding.inflate(inflater)
+        else
+            startFragment = false
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val binding = FragmentSecondBinding.bind(view)
-        binding.apply {
-        }
-
-        getAllSymbols()
+        if (startFragment)
+            getAllSymbols()
     }
 
     private fun getAllSymbols() {
-        viewModel.getAllSymbols().observe(viewLifecycleOwner) {
+        viewModel.getAllSymbols().observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(getAllSymbols) Failure: ${it.message}")
-                    Log.i("shahoLog", "(getAllSymbols) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (getAllSymbols) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (getAllSymbols) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -61,9 +73,9 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(getAllSymbols) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (getAllSymbols) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(getAllSymbols) Success")
+                    showLog += "${getCurrentTime()} (getAllSymbols) Success \n\n"
                     getAllAccounts()
                 }
             }
@@ -71,11 +83,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     }
 
     private fun getAllAccounts() {
-        viewModel.getAllAccounts().observe(viewLifecycleOwner) {
+        viewModel.getAllAccounts().observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(getAllAccounts) Failure: ${it.message}")
-                    Log.i("shahoLog", "(getAllAccounts) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (getAllAccounts) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (getAllAccounts) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -85,9 +97,9 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(getAllAccounts) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (getAllAccounts) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(getAllAccounts) Success")
+                    showLog += "${getCurrentTime()} (getAllAccounts) Success \n\n"
                     startLoop()
                 }
             }
@@ -100,11 +112,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
             startAt = System.currentTimeMillis().takeOfHoursAgo(hourAgo) / 1000,
             endAt = System.currentTimeMillis() / 1000,
             type = typeOfCandle
-        ).observe(viewLifecycleOwner) {
+        ).observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(getAllCandles) Failure: ${it.message}")
-                    Log.i("shahoLog", "(getAllCandles) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (getAllCandles) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (getAllCandles) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -114,9 +126,9 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(getAllCandles) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (getAllCandles) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(getAllCandles) Success: ${it.data}")
+                    showLog += "${getCurrentTime()} (getAllCandles) Success \n\n"
                     if (bought) {
                         CoroutineScope(Dispatchers.Main).launch {
                             getLastTwoCandle()
@@ -131,11 +143,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     private fun getMinOpenCandle() {
         viewModel.getMinOpenCandle(
             hourAgo = hourAgo
-        ).observe(viewLifecycleOwner) {
+        ).observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(getMinOpenCandle) Failure: ${it.message}")
-                    Log.i("shahoLog", "(getMinOpenCandle) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (getMinOpenCandle) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (getMinOpenCandle) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -145,9 +157,9 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(getMinOpenCandle) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (getMinOpenCandle) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(getMinOpenCandle) Success: ${it.data}")
+                    showLog += "${getCurrentTime()} (getMinOpenCandle) Success: ${it.data} \n\n"
                     minOpenCandleCurrent = it.data?.toDouble() ?: 0.0
 
                     CoroutineScope(Dispatchers.Main).launch {
@@ -159,7 +171,7 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     }
 
     private fun startLoop() {
-        Log.i("shahoLog", "(startLoop)")
+        showLog += "${getCurrentTime()} (startLoop) \n\n"
         CoroutineScope(Dispatchers.Default).launch {
             while (true) {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -175,11 +187,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     private suspend fun getLastTwoCandle() {
         if (!loopLocked) {
             loopLocked = true
-            viewModel.getLastTwoCandle().observe(viewLifecycleOwner) {
+            viewModel.getLastTwoCandle().observeForever {
                 when (it) {
                     is Resource.Failure -> {
-                        Log.i("shahoLog", "(getLastCandle) Failure: ${it.message}")
-                        Log.i("shahoLog", "(getLastCandle) retry after $errorDelay second")
+                        showLog += "${getCurrentTime()} (getLastCandle) Failure: ${it.message} \n\n"
+                        showLog += "${getCurrentTime()} (getLastCandle) retry after $errorDelay second \n\n"
 
                         CoroutineScope(Dispatchers.Default).launch {
                             delay(errorDelay)
@@ -188,13 +200,12 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                             }
                         }
                     }
-                    Resource.Loading -> Log.i("shahoLog", "(getLastCandle) Loading: ")
+                    Resource.Loading -> showLog += "${getCurrentTime()} (getLastCandle) Loading \n\n"
                     is Resource.Success -> {
                         if ((it.data?.size ?: 0) > 1) {
-//                            loopDelay = ((((it.data?.get(0)?.time?.toLong() ?: 0) + typeOfCandle.second) - (System.currentTimeMillis() / 1000)) + 30) * 1000
 
                             val lastCandle = it.data?.get(1)
-                            Log.i("shahoLog", "(getLastCandle) Success: $lastCandle")
+                            showLog += "${getCurrentTime()} (getLastCandle) Success: $lastCandle \n\n"
                             if (bought) {
                                 checkPointOfSale(lastCandle)
                             } else {
@@ -212,7 +223,13 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                                     }
                                 }
                             }
-                            Log.i("shahoLog", " wait for $loopDelay millisecond")
+                            showLog += "${getCurrentTime()} wait for $loopDelay millisecond \n\n"
+
+                            CoroutineScope(Dispatchers.Main).launch {
+                                binding.showLogTextView.text = showLog
+                                binding.headerLogTextView.text = showHeaderLog
+                                showLog = ""
+                            }
                         }
                     }
                 }
@@ -222,10 +239,10 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
 
     private fun checkFirstPossiblePointOfPurchase(lastCandle: CandleResponse?) {
         if (minOpenCandleCurrent < (lastCandle?.low?.toDouble() ?: Double.MAX_VALUE)) {
-            Log.i("shahoLog", "(checkFirstPossiblePointOfPurchase) Has not reached the minimum value")
+            showLog += "${getCurrentTime()} (checkFirstPossiblePointOfPurchase) Has not reached the minimum value \n\n"
             resetPossiblePoints()
         } else {
-            Log.i("shahoLog", "(checkFirstPossiblePointOfPurchase) Has reached the minimum value. Please wait for next candle")
+            showLog += "${getCurrentTime()} (checkFirstPossiblePointOfPurchase) Has reached the minimum value. Please wait for next candle \n\n"
             firstPossiblePointOfPurchase = lastCandle?.low?.toDouble() ?: 0.0
             checkSecondPossiblePointOfPurchase(lastCandle)
         }
@@ -233,21 +250,22 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
 
     private fun checkSecondPossiblePointOfPurchase(lastCandle: CandleResponse?) {
         if ((lastCandle?.open?.toDouble() ?: Double.MAX_VALUE) < (lastCandle?.close?.toDouble() ?: 0.0)) {
-            Log.i("shahoLog", "(checkSecondPossiblePointOfPurchase) Has reached the second possible point value. Please wait for next candle")
+            showLog += "${getCurrentTime()} (checkSecondPossiblePointOfPurchase) Has reached the second possible point value. Please wait for next candle \n\n"
             secondPossiblePointOfPurchase = lastCandle?.low?.toDouble() ?: 0.0
         } else {
-            Log.i("shahoLog", "(checkSecondPossiblePointOfPurchase) Has not reached the minimum value")
+            showLog += "${getCurrentTime()} (checkSecondPossiblePointOfPurchase) Has not reached the minimum value \n\n"
             checkFirstPossiblePointOfPurchase(lastCandle)
         }
     }
 
     private fun finalCheck(lastCandle: CandleResponse?) {
         if ((lastCandle?.open?.toDouble() ?: Double.MAX_VALUE) > (lastCandle?.close?.toDouble() ?: 0.0)) {
-            Log.i("shahoLog", "(finalCheck) reset state")
+            showLog += "${getCurrentTime()} (finalCheck) reset state \n\n"
             resetPossiblePoints()
             loopLocked = false
         } else {
-            Log.i("shahoLog", "(finalCheck) ************** buy ************** price: ${lastCandle?.open}")
+            showLog += "${getCurrentTime()} (finalCheck) ************** buy ************** price: ${lastCandle?.open} \n\n"
+            showHeaderLog += "${getCurrentTime()} ${getString(R.string.bought, lastCandle?.open)} \n\n"
             purchasedPrice = lastCandle?.open?.toDouble() ?: 0.0
             createBuyMarketOrder()
             resetPossiblePoints()
@@ -262,11 +280,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     private fun createBuyMarketOrder() {
         viewModel.createBuyMarketOrder(
             symbol = symbol
-        ).observe(viewLifecycleOwner) {
+        ).observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(createBuyMarketOrder) Failure: ${it.message}")
-                    Log.i("shahoLog", "(createBuyMarketOrder) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (createBuyMarketOrder) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (createBuyMarketOrder) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -278,9 +296,9 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(createBuyMarketOrder) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (createBuyMarketOrder) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(createBuyMarketOrder) Success")
+                    showLog += "${getCurrentTime()} (createBuyMarketOrder) Success \n\n"
                     bought = true
                     loopLocked = false
                 }
@@ -291,11 +309,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
     private fun createSellMarketOrder(damage: Boolean) {
         viewModel.createSellMarketOrder(
             symbol = symbol
-        ).observe(viewLifecycleOwner) {
+        ).observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(createSellMarketOrder) Failure: ${it.message}")
-                    Log.i("shahoLog", "(createSellMarketOrder) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (createSellMarketOrder) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (createSellMarketOrder) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -307,15 +325,15 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(createSellMarketOrder) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (createSellMarketOrder) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(createSellMarketOrder) Success")
+                    showLog += "${getCurrentTime()} (createSellMarketOrder) Success \n\n"
                     if (damage) {
-                        Log.i("shahoLog", "(sellLog) ************** Unfortunately, you lost 2% **************")
-                        Log.i("shahoLog", "(createSellMarketOrder) ************** Unfortunately, you lost 2% **************")
+                        showLog += "${getCurrentTime()} (createSellMarketOrder) ************** Unfortunately, you lost 2% ************** \n\n"
+                        showHeaderLog += "${getCurrentTime()} ${getString(R.string.sell_at_a_loss)} \n\n"
                     } else {
-                        Log.i("shahoLog", "(sellLog) ************** Congratulations, you earned 2% **************")
-                        Log.i("shahoLog", "(createSellMarketOrder) ************** Congratulations, you earned 2% **************")
+                        showLog += "${getCurrentTime()} (createSellMarketOrder) ************** Congratulations, you earned 2% ************** \n\n"
+                        showHeaderLog += "${getCurrentTime()} ${getString(R.string.sell_with_profit)} \n\n"
                     }
                     bought = false
                     loopLocked = false
@@ -329,11 +347,11 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
             symbol = symbol,
             price = price,
             currency = currency
-        ).observe(viewLifecycleOwner) {
+        ).observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(createSellLimitOrder) Failure: ${it.message}")
-                    Log.i("shahoLog", "(createSellLimitOrder) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (createSellLimitOrder) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (createSellLimitOrder) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -347,20 +365,20 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(createSellLimitOrder) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (createSellLimitOrder) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(createSellLimitOrder) Success")
+                    showLog += "${getCurrentTime()} (createSellLimitOrder) Success \n\n"
                 }
             }
         }
     }
 
     private fun cancelAllOrders() {
-        viewModel.cancelAllOrders().observe(viewLifecycleOwner) {
+        viewModel.cancelAllOrders().observeForever {
             when (it) {
                 is Resource.Failure -> {
-                    Log.i("shahoLog", "(cancelAllOrders) Failure: ${it.message}")
-                    Log.i("shahoLog", "(cancelAllOrders) retry after $errorDelay second")
+                    showLog += "${getCurrentTime()} (cancelAllOrders) Failure: ${it.message} \n\n"
+                    showLog += "${getCurrentTime()} (cancelAllOrders) retry after $errorDelay second \n\n"
 
                     CoroutineScope(Dispatchers.Default).launch {
                         delay(errorDelay)
@@ -370,9 +388,9 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                         }
                     }
                 }
-                Resource.Loading -> Log.i("shahoLog", "(cancelAllOrders) Loading: ")
+                Resource.Loading -> showLog += "${getCurrentTime()} (cancelAllOrders) Loading \n\n"
                 is Resource.Success -> {
-                    Log.i("shahoLog", "(cancelAllOrders) Success")
+                    showLog += "${getCurrentTime()} (cancelAllOrders) Success \n\n"
                 }
             }
         }
@@ -389,7 +407,7 @@ class SecondFragment : Fragment(R.layout.fragment_second) {
                 }
                 else -> {
                     loopLocked = false
-                    Log.i("shahoLog", "(checkPointOfSale) wait next candle for sale")
+                    showLog += "${getCurrentTime()} (checkPointOfSale) wait next candle for sale \n\n"
                 }
             }
         } ?: kotlin.run {

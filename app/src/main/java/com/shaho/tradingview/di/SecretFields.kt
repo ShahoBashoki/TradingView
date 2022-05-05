@@ -1,13 +1,14 @@
 package com.shaho.tradingview.di
 
+import android.util.Base64
 import com.shaho.tradingview.BuildConfig
+import com.shaho.tradingview.util.enum.AlgorithmType
 import okhttp3.Request
 import okio.Buffer
-import org.apache.commons.codec.binary.Base64
-import org.apache.commons.codec.digest.HmacAlgorithms
-import org.apache.commons.codec.digest.HmacUtils
 import java.io.IOException
 import java.nio.charset.Charset
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 
 class SecretFields @Inject constructor() {
@@ -59,11 +60,11 @@ class SecretFields @Inject constructor() {
         }
         val originToSign = stringBuilder.toString()
 
-        return Base64.encodeBase64String(HmacUtils(HmacAlgorithms.HMAC_SHA_256, apiSecret).hmac(originToSign))
+        return getBase64(key = apiSecret, value = originToSign)
     }
 
     fun getApiPassphrase(): String {
-        return Base64.encodeBase64String(HmacUtils(HmacAlgorithms.HMAC_SHA_256, apiSecret).hmac(myApiPassphrase))
+        return getBase64(key = apiSecret, value = myApiPassphrase)
     }
 
     private fun getRequestBody(request: Request): String? {
@@ -83,5 +84,12 @@ class SecretFields @Inject constructor() {
             charset = contentType.charset(Charset.forName("UTF-8"))
         }
         return buffer.readString(charset)
+    }
+
+    private fun getBase64(key: String, value: String): String {
+        val keySpec = SecretKeySpec(key.toByteArray(), AlgorithmType.H_MAC_SHA256.value)
+        val mac = Mac.getInstance(AlgorithmType.H_MAC_SHA256.value)
+        mac.init(keySpec)
+        return String(Base64.encode(mac.doFinal(value.toByteArray()), 2))
     }
 }

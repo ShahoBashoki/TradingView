@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">Trading View</string>
+    <string name="app_name">Trading View</string>Bought at a price of 2
+    <string name="first_fragment">"First"</string>
+    <string name="second_fragment">"Second"</string>
+    <string name="third_fragment">"Third"</string>
+    <string name="bought">"Bought at a price of %1$s"</string>
+    <string name="sell_at_a_loss">"Unfortunately, you lost 2%"</string>
+    <string name="sell_with_profit">"Congratulations, you earned 2%"</string>
 </resources>
