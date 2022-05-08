@@ -41,6 +41,7 @@ lateinit var viewModel: SecondViewModel
 
 private val hourAgo = 12
 private val symbol = "XRP-USDT"
+private val currency = "XRP"
 private val typeOfCandle = CandleTimeType.MIN_5
 private var loopDelay = typeOfCandle.second * 1000
 private val errorDelay: Long = 10 * 1000
@@ -50,8 +51,8 @@ private var secondPossiblePointOfPurchase = 0.0
 private var loopLocked = false
 private var bought = false
 private var purchasedPrice = 0.0
-private var interestRates = 1.005
-private var percentageOfLoss = 0.995
+private var interestRates = 1.02
+private var percentageOfLoss = 0.98
 private lateinit var logList: SnapshotStateList<String>
 
 @Composable
@@ -345,6 +346,10 @@ private fun createBuyMarketOrder(context: Context) {
                 logList.add("${context.getCurrentTime()} (createBuyMarketOrder) Success")
                 bought = true
                 loopLocked = false
+
+                CoroutineScope(Dispatchers.Default).launch {
+                    getAllAccounts(context = context)
+                }
             }
         }
     }
@@ -352,7 +357,8 @@ private fun createBuyMarketOrder(context: Context) {
 
 private fun createSellMarketOrder(damage: Boolean, context: Context) {
     viewModel.createSellMarketOrder(
-        symbol = symbol
+        symbol = symbol,
+        currency = currency
     ).observeForever {
         when (it) {
             is Resource.Failure -> {

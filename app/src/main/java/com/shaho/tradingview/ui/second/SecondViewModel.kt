@@ -115,7 +115,8 @@ class SecondViewModel @Inject constructor(
     }
 
     fun createSellMarketOrder(
-        symbol: String
+        symbol: String,
+        currency: String
     ) = liveData(viewModelScope.coroutineContext + Dispatchers.IO) {
         emit(Resource.Loading)
         try {
@@ -124,9 +125,7 @@ class SecondViewModel @Inject constructor(
                     clientOid = UUID.randomUUID().toString(),
                     side = OrderSideType.SELL.value,
                     symbol = symbol,
-                    size = getSymbol(
-                        symbol = symbol
-                    ).baseMaxSize ?: defaultBaseMaxSize
+                    size = "%.${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)?.length}f".format(getAccountsFromLocal(currency).first().available?.toDouble())
                 )
             ).collect {
                 emit(it)
@@ -149,7 +148,7 @@ class SecondViewModel @Inject constructor(
                     side = OrderSideType.SELL.value,
                     symbol = symbol,
                     price = price,
-                    size = "%.${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)?.length}f".format(getAccountsFromLocal(currency).first().balance?.toDouble())
+                    size = "%.${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)?.length}f".format(getAccountsFromLocal(currency).first().available?.toDouble())
                 )
             ).collect {
                 emit(it)
