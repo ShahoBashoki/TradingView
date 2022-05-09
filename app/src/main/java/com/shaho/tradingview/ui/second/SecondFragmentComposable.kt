@@ -347,7 +347,7 @@ private fun createBuyMarketOrder(context: Context) {
                 bought = true
                 loopLocked = false
 
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(Dispatchers.Main).launch {
                     getAllAccounts(context = context)
                 }
             }
