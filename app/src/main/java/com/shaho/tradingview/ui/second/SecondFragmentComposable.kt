@@ -129,13 +129,13 @@ private fun getAllSymbols(context: Context) {
             Resource.Loading -> logList.add("${context.getCurrentTime()} (getAllSymbols) Loading")
             is Resource.Success -> {
                 logList.add("${context.getCurrentTime()} (getAllSymbols) Success")
-                getAllAccounts(context = context)
+                getAllAccounts(context = context, startLoop = true)
             }
         }
     }
 }
 
-private fun getAllAccounts(context: Context) {
+private fun getAllAccounts(context: Context, startLoop: Boolean = false) {
     viewModel.getAllAccounts().observeForever {
         when (it) {
             is Resource.Failure -> {
@@ -153,7 +153,8 @@ private fun getAllAccounts(context: Context) {
             Resource.Loading -> logList.add("${context.getCurrentTime()} (getAllAccounts) Loading")
             is Resource.Success -> {
                 logList.add("${context.getCurrentTime()} (getAllAccounts) Success")
-                startLoop(context = context)
+                if (startLoop)
+                    startLoop(context = context)
             }
         }
     }
@@ -309,7 +310,7 @@ private fun checkSecondPossiblePointOfPurchase(lastCandle: CandleResponse?, cont
 private fun finalCheck(lastCandle: CandleResponse?, context: Context) {
     if ((lastCandle?.open?.toDouble() ?: Double.MAX_VALUE) > (lastCandle?.close?.toDouble() ?: 0.0)) {
         logList.add("${context.getCurrentTime()} (finalCheck) reset state")
-        resetPossiblePoints()
+        checkFirstPossiblePointOfPurchase(lastCandle, context = context)
         loopLocked = false
     } else {
         logList.add("${context.getCurrentTime()} (finalCheck) ************** buy ************** price: ${lastCandle?.open}")
