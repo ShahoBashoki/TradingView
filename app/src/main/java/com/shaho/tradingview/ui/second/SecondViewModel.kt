@@ -1,5 +1,6 @@
 package com.shaho.tradingview.ui.second
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
@@ -119,6 +120,17 @@ class SecondViewModel @Inject constructor(
         currency: String
     ) = liveData(viewModelScope.coroutineContext + Dispatchers.IO) {
         emit(Resource.Loading)
+        Log.i("shahoshaho", "createSellLimitOrder: ${getSymbol(symbol = symbol)}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getSymbol(symbol = symbol).baseIncrement}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getSymbol(symbol = symbol).baseIncrement?.split('.')}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)?.length}")
+        Log.i("shahoshaho", "%.${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)?.length}f")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getAccountsFromLocal(currency)}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getAccountsFromLocal(currency).first()}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getAccountsFromLocal(currency).first().available}")
+        Log.i("shahoshaho", "createSellLimitOrder: ${getAccountsFromLocal(currency).first().available?.toDouble()}")
+        Log.i("shahoshaho", "%.${getSymbol(symbol = symbol).baseIncrement?.split('.')?.get(1)?.length}f".format(getAccountsFromLocal(currency).first().available?.toDouble()))
         try {
             orderRepository.createMarketOrder(
                 marketOrderCreateRequest = MarketOrderCreateRequest(

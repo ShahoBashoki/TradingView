@@ -135,7 +135,7 @@ private fun getAllSymbols(context: Context) {
     }
 }
 
-private fun getAllAccounts(context: Context, startLoop: Boolean = false) {
+private fun getAllAccounts(context: Context, startLoop: Boolean = false, damage: Boolean = false) {
     viewModel.getAllAccounts().observeForever {
         when (it) {
             is Resource.Failure -> {
@@ -146,7 +146,7 @@ private fun getAllAccounts(context: Context, startLoop: Boolean = false) {
                     delay(errorDelay)
 
                     CoroutineScope(Dispatchers.Main).launch {
-                        getAllAccounts(context = context)
+                        getAllAccounts(context = context, startLoop = startLoop, damage = damage)
                     }
                 }
             }
@@ -155,6 +155,8 @@ private fun getAllAccounts(context: Context, startLoop: Boolean = false) {
                 logList.add("${context.getCurrentTime()} (getAllAccounts) Success")
                 if (startLoop)
                     startLoop(context = context)
+                else
+                    createSellMarketOrder(damage = damage, context = context)
             }
         }
     }
@@ -318,7 +320,17 @@ private fun finalCheck(lastCandle: CandleResponse?, context: Context) {
         createBuyMarketOrder(context = context)
         resetPossiblePoints()
     }
-}
+}2022-05-14 23:24:20.967 2030-4347/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: SymbolResponse(symbol=XRP-USDT, name=XRP-USDT, baseCurrency=XRP, quoteCurrency=USDT, market=USDS, baseMinSize=0.1, quoteMinSize=0.01, baseMaxSize=10000000000, quoteMaxSize=99999999, baseIncrement=0.0001, quoteIncrement=0.000001, priceIncrement=0.00001, feeCurrency=USDT, priceLimitRate=0.1, enableTrading=true, isMarginEnabled=true)
+2022-05-14 23:24:20.967 2030-4347/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: 0.0001
+2022-05-14 23:24:20.968 2030-4509/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: [0, 0001]
+2022-05-14 23:24:20.969 2030-4347/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: 0001
+2022-05-14 23:24:20.969 2030-4509/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: 4
+2022-05-14 23:24:20.970 2030-4347/com.shaho.tradingview I/shahoshaho: %.4f
+2022-05-14 23:24:20.970 2030-4509/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: [AccountResponse(id=6277fbd0f50e3f0001dcad43, currency=XRP, type=trade, balance=0.00009369, available=0.00009369, holds=0, transferable=null), AccountResponse(id=62717bf43d725300018e4e9f, currency=XRP, type=trade, balance=10.18946671, available=10.18946671, holds=0, transferable=null)]
+2022-05-14 23:24:20.970 2030-4347/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: AccountResponse(id=6277fbd0f50e3f0001dcad43, currency=XRP, type=trade, balance=0.00009369, available=0.00009369, holds=0, transferable=null)
+2022-05-14 23:24:20.973 2030-4347/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: 0.00009369
+2022-05-14 23:24:20.974 2030-4347/com.shaho.tradingview I/shahoshaho: createSellLimitOrder: 9.369E-5
+2022-05-14 23:24:20.974 2030-4347/com.shaho.tradingview I/shahoshaho: 0.0001
 
 private fun resetPossiblePoints() {
     firstPossiblePointOfPurchase = 0.0
@@ -347,10 +359,6 @@ private fun createBuyMarketOrder(context: Context) {
                 logList.add("${context.getCurrentTime()} (createBuyMarketOrder) Success")
                 bought = true
                 loopLocked = false
-
-                CoroutineScope(Dispatchers.Main).launch {
-                    getAllAccounts(context = context)
-                }
             }
         }
     }
@@ -390,13 +398,13 @@ private fun createSellMarketOrder(damage: Boolean, context: Context) {
 }
 
 private fun checkPointOfSale(lastCandle: CandleResponse?, context: Context) {
-    lastCandle?.open?.toDouble()?.let { itOpen ->
+    lastCandle?.close?.toDouble()?.let { itOpen ->
         when {
             itOpen > (purchasedPrice * interestRates) -> {
-                createSellMarketOrder(damage = false, context = context)
+                getAllAccounts(context = context, startLoop = false, damage = false)
             }
             itOpen < (purchasedPrice * percentageOfLoss) -> {
-                createSellMarketOrder(damage = true, context = context)
+                getAllAccounts(context = context, startLoop = false, damage = true)
             }
             else -> {
                 loopLocked = false
